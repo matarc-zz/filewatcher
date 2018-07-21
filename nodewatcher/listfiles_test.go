@@ -1,6 +1,9 @@
 package main
 
 import (
+	"io/ioutil"
+	"os"
+	"path"
 	"testing"
 )
 
@@ -51,5 +54,51 @@ func TestChroot(t *testing.T) {
 	}
 	if newPath != "b/c/d" {
 		t.Fatalf("newPath should be b/c/d, is `%s` instead", newPath)
+	}
+}
+func TestListFiles(t *testing.T) {
+	files := make(map[string]bool)
+	tmpDir, err := ioutil.TempDir("", "nodewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	files[path.Base(tmpDir)] = true
+	// Create a file in tmpDir
+	tmpFile, err := ioutil.TempFile(tmpDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newPath, err := Chroot(tmpFile.Name(), tmpDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files[newPath] = true
+	// Create a subdirectory in tmpDir
+	subTmpDir, err := ioutil.TempDir(tmpDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newPath, err = Chroot(subTmpDir, tmpDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files[newPath] = true
+	// Create a file in that subdirectory
+	tmpFile, err = ioutil.TempFile(subTmpDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	newPath, err = Chroot(tmpFile.Name(), tmpDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files[newPath] = true
+	pathCh := make(chan string)
+	go ListFiles(tmpDir, pathCh)
+	for path := range pathCh {
+		if _, ok := files[path]; !ok {
+			t.Fatalf("`%s` should be in the list of files : `%v`", path, files)
+		}
 	}
 }
