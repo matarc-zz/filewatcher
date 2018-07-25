@@ -10,26 +10,6 @@ import (
 )
 
 func TestWatchDir(t *testing.T) {
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		t.Fatal(err)
-	}
-	successCh := make(chan bool)
-	quitCh := make(chan struct{})
-	go func() {
-		for {
-			select {
-			case event := <-watcher.Events:
-				if event.Op&fsnotify.Create == fsnotify.Create {
-					successCh <- true
-				}
-			case <-time.After(time.Second):
-				successCh <- false
-			case <-quitCh:
-				return
-			}
-		}
-	}()
 	rootDir, err := ioutil.TempDir("", "nodewatcher")
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +23,27 @@ func TestWatchDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = WatchDir(rootDir, watcher)
+	w := NewWatcher(rootDir)
+	if w == nil {
+		t.Fatalf("NewWatcher failed to initialize fsnotify.Watcher")
+	}
+	successCh := make(chan bool)
+	quitCh := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case event := <-w.watcher.Events:
+				if event.Op&fsnotify.Create == fsnotify.Create {
+					successCh <- true
+				}
+			case <-time.After(time.Second):
+				successCh <- false
+			case <-quitCh:
+				return
+			}
+		}
+	}()
+	err = w.WatchDir()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,4 +56,20 @@ func TestWatchDir(t *testing.T) {
 		t.Fatalf("Watcher timed out")
 	}
 	close(quitCh)
+}
+
+func TestNewWatcher(t *testing.T) {
+	w := NewWatcher("/my/path")
+	if w == nil {
+		t.Fatalf("NewWatcher failed to initialize fsnotify.Watcher")
+	}
+	if w.dir != "/my/path" {
+		t.Fatalf("w.dir should be '/my/path', instead is '%s'", w.dir)
+	}
+	if w.watcher == nil {
+		t.Fatalf("w.watcher should not be nil")
+	}
+	if w.quitCh == nil {
+		t.Fatalf("w.quitCh should not be nil")
+	}
 }
