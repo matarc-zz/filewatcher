@@ -1,46 +1,25 @@
 package main
 
+import "github.com/matarc/filewatcher/shared"
+
 type PathManager struct {
-	events chan PathEvent
-	list   []PathEvent
+	events chan shared.PathEvent
+	list   []shared.PathEvent
 }
 
-type PathEvent struct {
-	Path  string
-	Event Event
-}
-
-type Event uint32
-
-const (
-	Create Event = 1 << iota
-	Remove
-)
-
-func (e Event) String() string {
-	switch e {
-	case Create:
-		return "Create"
-	case Remove:
-		return "Remove"
-	default:
-		return "Unknown event"
-	}
-}
-
-func NewPathManager(pathCh chan<- PathEvent) *PathManager {
+func NewPathManager(pathCh chan<- shared.PathEvent) *PathManager {
 	pm := new(PathManager)
-	pm.events = make(chan PathEvent, 100)
+	pm.events = make(chan shared.PathEvent, 100)
 	go pm.handleList(pathCh)
 	return pm
 }
 
-func (pm *PathManager) GetEventsChan() chan<- PathEvent {
+func (pm *PathManager) GetEventsChan() chan<- shared.PathEvent {
 	return pm.events
 }
 
-func (pm *PathManager) handleList(pathCh chan<- PathEvent) {
-	var buf *PathEvent
+func (pm *PathManager) handleList(pathCh chan<- shared.PathEvent) {
+	var buf *shared.PathEvent
 	dataSentCh := make(chan struct{})
 	for {
 		if buf == nil && len(pm.list) > 0 {

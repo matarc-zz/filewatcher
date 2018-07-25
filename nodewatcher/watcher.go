@@ -6,6 +6,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/shared"
 )
 
 type Watcher struct {
@@ -46,7 +47,7 @@ func (w *Watcher) WatchDir() error {
 
 // HandleFileEvents notifies our pathmanager whenever there are new files or deleted files in the directory watched
 // by the `Watcher` as well as its subdirectories.
-func (w *Watcher) HandleFileEvents(pathCh chan<- PathEvent) {
+func (w *Watcher) HandleFileEvents(pathCh chan<- shared.PathEvent) {
 	for {
 		select {
 		case event := <-w.watcher.Events:
@@ -56,7 +57,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- PathEvent) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- PathEvent{Path: newPath, Event: Create}
+				pathCh <- shared.PathEvent{Path: newPath, Event: shared.Create}
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove ||
 				event.Op&fsnotify.Rename == fsnotify.Rename {
@@ -65,7 +66,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- PathEvent) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- PathEvent{Path: newPath, Event: Remove}
+				pathCh <- shared.PathEvent{Path: newPath, Event: shared.Remove}
 			}
 		}
 	}

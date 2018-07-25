@@ -4,11 +4,13 @@ import (
 	"encoding/gob"
 	"net"
 	"testing"
+
+	"github.com/matarc/filewatcher/shared"
 )
 
 func TestRun(t *testing.T) {
 	clt := NewClient("localhost:12345")
-	pathCh := make(chan PathEvent)
+	pathCh := make(chan shared.PathEvent)
 	listener, err := net.Listen("tcp", "localhost:12345")
 	if err != nil {
 		t.Fatal(err)
@@ -19,8 +21,8 @@ func TestRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	dec := gob.NewDecoder(conn)
-	pathCh <- PathEvent{"/my/path", Create}
-	var buf PathEvent
+	pathCh <- shared.PathEvent{"/my/path", shared.Create}
+	var buf shared.PathEvent
 	err = dec.Decode(&buf)
 	if err != nil {
 		t.Fatal(err)
@@ -28,7 +30,7 @@ func TestRun(t *testing.T) {
 	if buf.Path != "/my/path" {
 		t.Fatalf("buf.path should be '/my/path', instead is '%s'", buf.Path)
 	}
-	if buf.Event != Create {
+	if buf.Event != shared.Create {
 		t.Fatalf("buf.event should be 'Create', instead is '%s'", buf.Event)
 	}
 }

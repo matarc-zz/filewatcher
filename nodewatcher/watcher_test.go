@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/matarc/filewatcher/shared"
 )
 
 func TestWatchDir(t *testing.T) {
@@ -94,7 +95,7 @@ func TestHandleFileEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pathCh := make(chan PathEvent)
+	pathCh := make(chan shared.PathEvent)
 	go w.HandleFileEvents(pathCh)
 
 	// Create a file in subDir
@@ -103,7 +104,7 @@ func TestHandleFileEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	pathEvent := <-pathCh
-	if pathEvent.Event&Create != Create {
+	if pathEvent.Event&shared.Create != shared.Create {
 		t.Fatalf("pathEvent.Event should be 'Create', instead is '%s'", pathEvent.Event)
 	}
 	path, err := Chroot(file.Name(), rootDir)
@@ -121,7 +122,7 @@ func TestHandleFileEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	pathEvent = <-pathCh
-	if pathEvent.Event&Create != Create {
+	if pathEvent.Event&shared.Create != shared.Create {
 		t.Fatalf("pathEvent.Event should be 'Create', instead is '%s'", pathEvent.Event)
 	}
 	newPath, err = Chroot(newPath, rootDir)
@@ -132,7 +133,7 @@ func TestHandleFileEvents(t *testing.T) {
 		t.Fatalf("pathEvent.Path should be '%s', instead is '%s'", newPath, pathEvent.Path)
 	}
 	pathEvent = <-pathCh
-	if pathEvent.Event&Remove != Remove {
+	if pathEvent.Event&shared.Remove != shared.Remove {
 		t.Fatalf("pathEvent.Event should be 'Remove', instead is '%s'", pathEvent.Event)
 	}
 	if pathEvent.Path != path {
@@ -146,7 +147,7 @@ func TestHandleFileEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 	pathEvent = <-pathCh
-	if pathEvent.Event&Remove != Remove {
+	if pathEvent.Event&shared.Remove != shared.Remove {
 		t.Fatalf("pathEvent.Event should be 'Remove', instead is '%s'", pathEvent.Event)
 	}
 	newPath, err = Chroot(newPath, rootDir)

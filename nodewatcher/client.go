@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/shared"
 )
 
 type Client struct {
 	serverAddress string
 	quitCh        chan struct{}
-	buf           PathEvent
+	buf           shared.PathEvent
 	bufIsEmpty    bool
 }
 
@@ -48,7 +49,7 @@ func (clt *Client) dial(network, address string) (conn net.Conn, err error) {
 	return
 }
 
-func (clt *Client) Run(pathCh <-chan PathEvent) {
+func (clt *Client) Run(pathCh <-chan shared.PathEvent) {
 	for {
 		select {
 		case <-clt.quitCh:
@@ -66,7 +67,7 @@ func (clt *Client) Run(pathCh <-chan PathEvent) {
 	}
 }
 
-func (clt *Client) sendList(conn net.Conn, pathCh <-chan PathEvent) {
+func (clt *Client) sendList(conn net.Conn, pathCh <-chan shared.PathEvent) {
 	enc := gob.NewEncoder(conn)
 	for {
 		if clt.bufIsEmpty {
@@ -82,7 +83,7 @@ func (clt *Client) sendList(conn net.Conn, pathCh <-chan PathEvent) {
 			glog.Error(err)
 			break
 		}
-		clt.buf = PathEvent{}
+		clt.buf = shared.PathEvent{}
 		clt.bufIsEmpty = true
 	}
 }
