@@ -15,15 +15,17 @@ type Client struct {
 	quitCh        chan struct{}
 	buf           shared.PathEvent
 	bufIsEmpty    bool
+	id            string
 }
 
 var ErrQuit = fmt.Errorf("Quit")
 
-func NewClient(serverAddress string) *Client {
+func NewClient(serverAddress, id string) *Client {
 	clt := new(Client)
 	clt.serverAddress = serverAddress
 	clt.quitCh = make(chan struct{})
 	clt.bufIsEmpty = true
+	clt.id = id
 	return clt
 }
 
@@ -78,7 +80,8 @@ func (clt *Client) sendList(conn net.Conn, pathCh <-chan shared.PathEvent) {
 				return
 			}
 		}
-		err := enc.Encode(clt.buf)
+		packet := shared.Packet{Id: clt.id, PathEvent: clt.buf}
+		err := enc.Encode(packet)
 		if err != nil {
 			glog.Error(err)
 			break

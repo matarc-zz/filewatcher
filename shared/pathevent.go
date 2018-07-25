@@ -5,6 +5,11 @@ type PathEvent struct {
 	Event Event
 }
 
+type Packet struct {
+	Id        string
+	PathEvent PathEvent
+}
+
 type Event uint32
 
 const (
