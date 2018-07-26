@@ -28,7 +28,7 @@ func (clt *Client) Stop() {
 	close(clt.quitCh)
 }
 
-func (clt *Client) dial(network, address string) (conn net.Conn, err error) {
+func (clt *Client) dial() (conn net.Conn, err error) {
 	for {
 		conn, err = net.Dial("tcp", clt.serverAddress)
 		if err == nil {
@@ -54,7 +54,7 @@ func (clt *Client) Run(pathCh <-chan []shared.Operation) {
 		default:
 		}
 		func() {
-			conn, err := clt.dial("tcp", clt.serverAddress)
+			conn, err := clt.dial()
 			if err == shared.ErrQuit {
 				return
 			}
