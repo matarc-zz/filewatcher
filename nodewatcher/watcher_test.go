@@ -95,7 +95,7 @@ func TestHandleFileEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pathCh := make(chan shared.PathEvent)
+	pathCh := make(chan shared.Operation)
 	go w.HandleFileEvents(pathCh)
 
 	// Create a file in subDir

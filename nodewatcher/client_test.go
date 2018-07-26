@@ -10,7 +10,7 @@ import (
 
 func TestRun(t *testing.T) {
 	clt := NewClient("localhost:12345", "client1")
-	pathCh := make(chan shared.PathEvent)
+	pathCh := make(chan []shared.Operation)
 	listener, err := net.Listen("tcp", "localhost:12345")
 	if err != nil {
 		t.Fatal(err)
@@ -21,17 +21,17 @@ func TestRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	dec := gob.NewDecoder(conn)
-	pathCh <- shared.PathEvent{"/my/path", shared.Create}
-	var packet shared.Packet
+	pathCh <- []shared.Operation{shared.Operation{"/my/path", shared.Create}}
+	var packet shared.Transaction
 	err = dec.Decode(&packet)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if packet.PathEvent.Path != "/my/path" {
-		t.Fatalf("Path should be '/my/path', instead is '%s'", packet.PathEvent.Path)
+	if packet.Operations[0].Path != "/my/path" {
+		t.Fatalf("Path should be '/my/path', instead is '%s'", packet.Operations[0].Path)
 	}
-	if packet.PathEvent.Event != shared.Create {
-		t.Fatalf("Event should be 'Create', instead is '%s'", packet.PathEvent.Event)
+	if packet.Operations[0].Event != shared.Create {
+		t.Fatalf("Event should be 'Create', instead is '%s'", packet.Operations[0].Event)
 	}
 	if packet.Id != "client1" {
 		t.Fatalf("Id should be 'client1', instead is '%s'", packet.Id)
@@ -43,8 +43,8 @@ func TestNewClient(t *testing.T) {
 	if clt == nil {
 		t.Fatalf("NewClient should not return a nil value")
 	}
-	if !clt.bufIsEmpty {
-		t.Fatalf("bufIsEmpty initial value should be 'true'")
+	if len(clt.buf) != 0 {
+		t.Fatalf("buf should be empty")
 	}
 	if clt.quitCh == nil {
 		t.Fatalf("quitCh should not be a nil channel")

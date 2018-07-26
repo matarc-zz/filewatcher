@@ -47,7 +47,7 @@ func (w *Watcher) WatchDir() error {
 
 // HandleFileEvents notifies our pathmanager whenever there are new files or deleted files in the directory watched
 // by the `Watcher` as well as its subdirectories.
-func (w *Watcher) HandleFileEvents(pathCh chan<- shared.PathEvent) {
+func (w *Watcher) HandleFileEvents(pathCh chan<- shared.Operation) {
 	for {
 		select {
 		case event := <-w.watcher.Events:
@@ -57,7 +57,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- shared.PathEvent) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- shared.PathEvent{Path: newPath, Event: shared.Create}
+				pathCh <- shared.Operation{Path: newPath, Event: shared.Create}
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove ||
 				event.Op&fsnotify.Rename == fsnotify.Rename {
@@ -66,7 +66,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- shared.PathEvent) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- shared.PathEvent{Path: newPath, Event: shared.Remove}
+				pathCh <- shared.Operation{Path: newPath, Event: shared.Remove}
 			}
 		}
 	}

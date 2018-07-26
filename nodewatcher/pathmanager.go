@@ -3,31 +3,31 @@ package main
 import "github.com/matarc/filewatcher/shared"
 
 type PathManager struct {
-	events chan shared.PathEvent
-	list   []shared.PathEvent
+	events chan shared.Operation
+	list   []shared.Operation
 }
 
-func NewPathManager(pathCh chan<- shared.PathEvent) *PathManager {
+func NewPathManager(pathCh chan<- []shared.Operation) *PathManager {
 	pm := new(PathManager)
-	pm.events = make(chan shared.PathEvent, 100)
+	pm.events = make(chan shared.Operation, 100)
 	go pm.handleList(pathCh)
 	return pm
 }
 
-func (pm *PathManager) GetEventsChan() chan<- shared.PathEvent {
+func (pm *PathManager) GetEventsChan() chan<- shared.Operation {
 	return pm.events
 }
 
-func (pm *PathManager) handleList(pathCh chan<- shared.PathEvent) {
-	var buf *shared.PathEvent
+func (pm *PathManager) handleList(pathCh chan<- []shared.Operation) {
+	var buf []shared.Operation
 	dataSentCh := make(chan struct{})
 	for {
-		if buf == nil && len(pm.list) > 0 {
-			buf = &pm.list[0]
-			pm.list = pm.list[1:]
+		if len(buf) == 0 && len(pm.list) > 0 {
+			buf = pm.list
+			pm.list = []shared.Operation{}
 			go func() {
-				pathCh <- *buf
-				buf = nil
+				pathCh <- buf
+				buf = []shared.Operation{}
 				dataSentCh <- struct{}{}
 			}()
 		}

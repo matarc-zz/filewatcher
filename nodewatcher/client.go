@@ -13,8 +13,7 @@ import (
 type Client struct {
 	serverAddress string
 	quitCh        chan struct{}
-	buf           shared.PathEvent
-	bufIsEmpty    bool
+	buf           []shared.Operation
 	id            string
 }
 
@@ -24,7 +23,6 @@ func NewClient(serverAddress, id string) *Client {
 	clt := new(Client)
 	clt.serverAddress = serverAddress
 	clt.quitCh = make(chan struct{})
-	clt.bufIsEmpty = true
 	clt.id = id
 	return clt
 }
@@ -51,7 +49,7 @@ func (clt *Client) dial(network, address string) (conn net.Conn, err error) {
 	return
 }
 
-func (clt *Client) Run(pathCh <-chan shared.PathEvent) {
+func (clt *Client) Run(pathCh <-chan []shared.Operation) {
 	for {
 		select {
 		case <-clt.quitCh:
@@ -69,24 +67,22 @@ func (clt *Client) Run(pathCh <-chan shared.PathEvent) {
 	}
 }
 
-func (clt *Client) sendList(conn net.Conn, pathCh <-chan shared.PathEvent) {
+func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
 	enc := gob.NewEncoder(conn)
 	for {
-		if clt.bufIsEmpty {
+		if len(clt.buf) == 0 {
 			select {
 			case clt.buf = <-pathCh:
-				clt.bufIsEmpty = false
 			case <-clt.quitCh:
 				return
 			}
 		}
-		packet := shared.Packet{Id: clt.id, PathEvent: clt.buf}
+		packet := shared.Transaction{Id: clt.id, Operations: clt.buf}
 		err := enc.Encode(packet)
 		if err != nil {
 			glog.Error(err)
 			break
 		}
-		clt.buf = shared.PathEvent{}
-		clt.bufIsEmpty = true
+		clt.buf = []shared.Operation{}
 	}
 }
