@@ -35,3 +35,20 @@ func (p *Paths) Update(transaction *Transaction, reply *Transaction) error {
 		return nil
 	})
 }
+
+func (p *Paths) ListFiles(_ *struct{}, list *[]Node) error {
+	return p.Db.View(func(tx *bolt.Tx) error {
+		return tx.ForEach(func(name []byte, b *bolt.Bucket) error {
+			node := Node{Id: string(name)}
+			err := b.ForEach(func(k, v []byte) error {
+				node.Files = append(node.Files, string(k))
+				return nil
+			})
+			if err != nil {
+				return err
+			}
+			*list = append(*list, node)
+			return nil
+		})
+	})
+}

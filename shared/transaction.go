@@ -10,6 +10,11 @@ type Transaction struct {
 	Operations []Operation
 }
 
+type Node struct {
+	Id    string
+	Files []string
+}
+
 type Event uint32
 
 const (

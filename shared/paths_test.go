@@ -96,3 +96,96 @@ func TestUpdate(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestListFiles(t *testing.T) {
+	rootDir, err := ioutil.TempDir("", "filewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(rootDir)
+	dbPath := filepath.Join(rootDir, "mydb")
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		glog.Error(err)
+		return
+	}
+	defer db.Close()
+	err = db.Batch(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucket([]byte("1"))
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("/my/path1"), []byte{})
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("/my/path2"), []byte{})
+		if err != nil {
+			return err
+		}
+		b, err = tx.CreateBucket([]byte("2"))
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("/your/path1"), []byte{})
+		if err != nil {
+			return err
+		}
+		err = b.Put([]byte("/your/path2"), []byte{})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	paths := new(Paths)
+	paths.Db = db
+	list := []Node{}
+	err = paths.ListFiles(&struct{}{}, &list)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(list) != 2 {
+		t.Fatalf("list should have '2' nodes, instead has '%d'", len(list))
+	}
+	if list[0].Id != "1" {
+		t.Fatalf("First node should have id '1', instead has '%s'", list[0].Id)
+	}
+	if len(list[0].Files) != 2 {
+		t.Fatalf("First node should have '2' files, instead has '%d'", len(list[0].Files))
+	}
+	m := make(map[string]bool)
+	m["/my/path1"] = true
+	m["/my/path2"] = true
+	for _, path := range list[0].Files {
+		if !m[path] {
+			t.Fatalf("'%s' shouldn't be in the database", path)
+		}
+		delete(m, path)
+	}
+	if len(m) != 0 {
+		t.Fatalf("Some path were not inserted in the database '%v'", m)
+	}
+
+	if list[1].Id != "2" {
+		t.Fatalf("First node should have id '2', instead has '%s'", list[1].Id)
+	}
+	if len(list[1].Files) != 2 {
+		t.Fatalf("First node should have '2' files, instead has '%d'", len(list[1].Files))
+	}
+	m["/your/path1"] = true
+	m["/your/path2"] = true
+	for _, path := range list[1].Files {
+		if !m[path] {
+			t.Fatalf("'%s' shouldn't be in the database", path)
+		}
+		delete(m, path)
+	}
+	if len(m) != 0 {
+		t.Fatalf("Some path were not inserted in the database '%v'", m)
+	}
+
+}
