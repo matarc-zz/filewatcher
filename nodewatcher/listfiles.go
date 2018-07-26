@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/golang/glog"
 )
 
 // Chroot changes the root of `path` using `newRoot`.
@@ -29,22 +26,4 @@ func Chroot(path, newRoot string) (string, error) {
 		return path, nil
 	}
 	return strings.TrimPrefix(strings.TrimPrefix(path, filepath.Dir(newRoot)), string(filepath.Separator)), nil
-}
-
-// Sends the path of every file in a directory `dir` and its subdirectories into the channel `pathCh`. (ls -R)
-func ListFiles(dir string, pathCh chan<- string) error {
-	defer close(pathCh)
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			glog.Error(err)
-			return err
-		}
-		newPath, err := Chroot(path, dir)
-		if err != nil {
-			glog.Error(err)
-			return err
-		}
-		pathCh <- newPath
-		return nil
-	})
 }

@@ -29,12 +29,19 @@ func NewWatcher(dir string) *Watcher {
 }
 
 // WatchDir recursively watches all files in `dir` directory and its subdirectories.
-func (w *Watcher) WatchDir() error {
-	return filepath.Walk(w.dir, func(path string, info os.FileInfo, err error) error {
+func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
+	operations := []shared.Operation{}
+	err := filepath.Walk(w.dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			glog.Error(err)
 			return err
 		}
+		newPath, err := Chroot(path, w.dir)
+		if err != nil {
+			glog.Error(err)
+			return err
+		}
+		operations = append(operations, shared.Operation{Path: newPath, Event: shared.Create})
 		if info.IsDir() {
 			if err := w.watcher.Add(path); err != nil {
 				glog.Error(err)
@@ -43,11 +50,13 @@ func (w *Watcher) WatchDir() error {
 		}
 		return nil
 	})
+	pathCh <- operations
+	return err
 }
 
 // HandleFileEvents notifies our pathmanager whenever there are new files or deleted files in the directory watched
 // by the `Watcher` as well as its subdirectories.
-func (w *Watcher) HandleFileEvents(pathCh chan<- shared.Operation) {
+func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 	for {
 		select {
 		case event := <-w.watcher.Events:
@@ -57,7 +66,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- shared.Operation) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- shared.Operation{Path: newPath, Event: shared.Create}
+				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Create}}
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove ||
 				event.Op&fsnotify.Rename == fsnotify.Rename {
@@ -66,7 +75,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- shared.Operation) {
 					glog.Error(err)
 					continue
 				}
-				pathCh <- shared.Operation{Path: newPath, Event: shared.Remove}
+				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Remove}}
 			}
 		}
 	}
