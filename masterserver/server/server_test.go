@@ -1,4 +1,4 @@
-package main
+package masterserver
 
 import (
 	"encoding/json"
@@ -22,11 +22,11 @@ func TestNewServer(t *testing.T) {
 	if srv == nil {
 		t.Fatalf("NewServer should not return nil")
 	}
-	if srv.address != "localhost:12345" {
-		t.Fatalf("address should be 'localhost:12345', instead is '%s'", srv.address)
+	if srv.Address != "localhost:12345" {
+		t.Fatalf("address should be 'localhost:12345', instead is '%s'", srv.Address)
 	}
-	if srv.storageAddress != "localhost:54321" {
-		t.Fatalf("storageAddress should be 'localhost:54321', instead is '%s'", srv.storageAddress)
+	if srv.StorageAddress != "localhost:54321" {
+		t.Fatalf("storageAddress should be 'localhost:54321', instead is '%s'", srv.StorageAddress)
 	}
 	if srv.quitCh == nil {
 		t.Fatalf("quitCh should not be nil")

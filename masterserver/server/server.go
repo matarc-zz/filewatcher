@@ -1,4 +1,4 @@
-package main
+package masterserver
 
 import (
 	"encoding/json"
@@ -14,16 +14,16 @@ import (
 )
 
 type Server struct {
-	address        string
-	storageAddress string
+	Address        string
+	StorageAddress string
 	quitCh         chan struct{}
 	nodes          []shared.Node
 }
 
 func NewServer(address, storageAddress string) *Server {
 	srv := new(Server)
-	srv.address = address
-	srv.storageAddress = storageAddress
+	srv.Address = address
+	srv.StorageAddress = storageAddress
 	srv.quitCh = make(chan struct{})
 	return srv
 }
@@ -32,7 +32,7 @@ func (srv *Server) Run() error {
 	router := mux.NewRouter()
 	// Create a route for our REST API on the method GET for list.
 	router.HandleFunc("/list", srv.SendList).Methods("GET")
-	listener, err := net.Listen("tcp", srv.address)
+	listener, err := net.Listen("tcp", srv.Address)
 	if err != nil {
 		glog.Error(err)
 		return err
@@ -73,7 +73,7 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (srv *Server) getList() ([]shared.Node, error) {
-	conn, err := net.Dial("tcp", srv.storageAddress)
+	conn, err := net.Dial("tcp", srv.StorageAddress)
 	if err != nil {
 		glog.Error(err)
 		return nil, err
