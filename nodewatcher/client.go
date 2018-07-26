@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/gob"
 	"fmt"
 	"net"
+	"net/rpc"
 	"time"
 
 	"github.com/golang/glog"
@@ -68,7 +68,8 @@ func (clt *Client) Run(pathCh <-chan []shared.Operation) {
 }
 
 func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
-	enc := gob.NewEncoder(conn)
+	rpcClt := rpc.NewClient(conn)
+	defer rpcClt.Close()
 	for {
 		if len(clt.buf) == 0 {
 			select {
@@ -77,8 +78,9 @@ func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
 				return
 			}
 		}
-		packet := shared.Transaction{Id: clt.id, Operations: clt.buf}
-		err := enc.Encode(packet)
+		transaction := &shared.Transaction{Id: clt.id, Operations: clt.buf}
+		reply := new(shared.Transaction)
+		err := rpcClt.Call("Paths.Update", transaction, reply)
 		if err != nil {
 			glog.Error(err)
 			break
