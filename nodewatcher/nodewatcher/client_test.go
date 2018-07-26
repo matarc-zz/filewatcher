@@ -1,4 +1,4 @@
-package main
+package nodewatcher
 
 import (
 	"fmt"
@@ -65,10 +65,10 @@ func TestNewClient(t *testing.T) {
 	if clt.quitCh == nil {
 		t.Fatalf("quitCh should not be a nil channel")
 	}
-	if clt.serverAddress != "localhost:12345" {
-		t.Fatalf("serverAddress should be 'localhost:12345', instead is '%s'", clt.serverAddress)
+	if clt.StorageAddress != "localhost:12345" {
+		t.Fatalf("serverAddress should be 'localhost:12345', instead is '%s'", clt.StorageAddress)
 	}
-	if clt.id != "client1" {
-		t.Fatalf("id should be 'client1', instead is '%s'", clt.id)
+	if clt.Id != "client1" {
+		t.Fatalf("id should be 'client1', instead is '%s'", clt.Id)
 	}
 }

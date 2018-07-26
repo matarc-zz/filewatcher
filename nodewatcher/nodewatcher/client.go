@@ -1,4 +1,4 @@
-package main
+package nodewatcher
 
 import (
 	"net"
@@ -10,17 +10,18 @@ import (
 )
 
 type Client struct {
-	serverAddress string
-	quitCh        chan struct{}
-	buf           []shared.Operation
-	id            string
+	StorageAddress string
+	quitCh         chan struct{}
+	buf            []shared.Operation
+	Id             string
+	Dir            string
 }
 
 func NewClient(serverAddress, id string) *Client {
 	clt := new(Client)
-	clt.serverAddress = serverAddress
+	clt.StorageAddress = serverAddress
 	clt.quitCh = make(chan struct{})
-	clt.id = id
+	clt.Id = id
 	return clt
 }
 
@@ -30,7 +31,7 @@ func (clt *Client) Stop() {
 
 func (clt *Client) dial() (conn net.Conn, err error) {
 	for {
-		conn, err = net.Dial("tcp", clt.serverAddress)
+		conn, err = net.Dial("tcp", clt.StorageAddress)
 		if err == nil {
 			return
 		}
@@ -75,7 +76,7 @@ func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
 				return
 			}
 		}
-		transaction := &shared.Transaction{Id: clt.id, Operations: clt.buf}
+		transaction := &shared.Transaction{Id: clt.Id, Operations: clt.buf}
 		reply := new(shared.Transaction)
 		err := rpcClt.Call("Paths.Update", transaction, reply)
 		if err != nil {
