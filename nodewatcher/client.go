@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"net/rpc"
 	"time"
@@ -16,8 +15,6 @@ type Client struct {
 	buf           []shared.Operation
 	id            string
 }
-
-var ErrQuit = fmt.Errorf("Quit")
 
 func NewClient(serverAddress, id string) *Client {
 	clt := new(Client)
@@ -42,7 +39,7 @@ func (clt *Client) dial(network, address string) (conn net.Conn, err error) {
 		// if the server is down.
 		select {
 		case <-clt.quitCh:
-			return nil, ErrQuit
+			return nil, shared.ErrQuit
 		case <-time.After(time.Second * 10):
 		}
 	}
@@ -58,7 +55,7 @@ func (clt *Client) Run(pathCh <-chan []shared.Operation) {
 		}
 		func() {
 			conn, err := clt.dial("tcp", clt.serverAddress)
-			if err == ErrQuit {
+			if err == shared.ErrQuit {
 				return
 			}
 			defer conn.Close()
