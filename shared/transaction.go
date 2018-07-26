@@ -1,13 +1,13 @@
 package shared
 
-type PathEvent struct {
+type Operation struct {
 	Path  string
 	Event Event
 }
 
-type Packet struct {
-	Id        string
-	PathEvent PathEvent
+type Transaction struct {
+	Id         string
+	Operations []Operation
 }
 
 type Event uint32
