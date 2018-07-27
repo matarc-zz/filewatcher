@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"net/rpc"
+	"os"
 	"sort"
 
 	"github.com/gorilla/mux"
@@ -20,12 +21,31 @@ type Server struct {
 	nodes          []shared.Node
 }
 
-func NewServer(address, storageAddress string) *Server {
+func LoadConfig(cfgPath string) *Server {
 	srv := new(Server)
-	srv.Address = address
-	srv.StorageAddress = storageAddress
-	srv.quitCh = make(chan struct{})
+	file, err := os.Open(cfgPath)
+	if err != nil {
+		glog.Errorf("Can't open '%s', using default configuration instead", cfgPath)
+	} else {
+		err = json.NewDecoder(file).Decode(srv)
+		if err != nil {
+			glog.Errorf("Can't decode '%s' as a json file, using default configuration instead", cfgPath)
+		}
+	}
+	srv.init()
 	return srv
+}
+
+func (srv *Server) init() {
+	if srv.Address == "" {
+		glog.Infof("Address is unset, using default address '%s'", shared.DefaultMasterserverAddress)
+		srv.Address = shared.DefaultMasterserverAddress
+	}
+	if srv.StorageAddress == "" {
+		glog.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
+		srv.StorageAddress = shared.DefaultStorageAddress
+	}
+	srv.quitCh = make(chan struct{})
 }
 
 func (srv *Server) Run() error {

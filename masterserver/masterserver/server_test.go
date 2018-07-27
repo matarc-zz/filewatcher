@@ -2,6 +2,7 @@ package masterserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -17,10 +18,50 @@ import (
 	"github.com/golang/glog"
 )
 
-func TestNewServer(t *testing.T) {
-	srv := NewServer("localhost:12345", "localhost:54321")
+func TestLoadConfig(t *testing.T) {
+	srv := LoadConfig("")
 	if srv == nil {
-		t.Fatalf("NewServer should not return nil")
+		t.Fatalf("LoadConfig should not return nil")
+	}
+	if srv.Address != shared.DefaultMasterserverAddress {
+		t.Fatalf("address should be '%s', instead is '%s'", shared.DefaultMasterserverAddress, srv.Address)
+	}
+	if srv.StorageAddress != shared.DefaultStorageAddress {
+		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
+	}
+	if srv.quitCh == nil {
+		t.Fatalf("quitCh should not be nil")
+	}
+
+	file, err := ioutil.TempFile("", "filewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(file.Name())
+	defer file.Close()
+	srv = LoadConfig(file.Name())
+	if srv == nil {
+		t.Fatalf("LoadConfig should not return nil")
+	}
+	if srv.Address != shared.DefaultMasterserverAddress {
+		t.Fatalf("address should be '%s', instead is '%s'", shared.DefaultMasterserverAddress, srv.Address)
+	}
+	if srv.StorageAddress != shared.DefaultStorageAddress {
+		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
+	}
+	if srv.quitCh == nil {
+		t.Fatalf("quitCh should not be nil")
+	}
+
+	srv.Address = "localhost:12345"
+	srv.StorageAddress = "localhost:54321"
+	err = json.NewEncoder(file).Encode(srv)
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv = LoadConfig(file.Name())
+	if srv == nil {
+		t.Fatalf("LoadConfig should not return nil")
 	}
 	if srv.Address != "localhost:12345" {
 		t.Fatalf("address should be 'localhost:12345', instead is '%s'", srv.Address)
@@ -61,7 +102,7 @@ func Test_getList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	listener, err := net.Listen("tcp", "localhost:54321")
+	listener, err := net.Listen("tcp", shared.DefaultStorageAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,7 +112,7 @@ func Test_getList(t *testing.T) {
 	paths.Db = db
 	rpcSrv.Register(paths)
 	go rpcSrv.Accept(listener)
-	srv := NewServer("localhost:12345", "localhost:54321")
+	srv := LoadConfig("")
 
 	// Test
 	nodes, err := srv.getList()
@@ -120,7 +161,7 @@ func TestSendList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := NewServer("localhost:12345", "localhost:54321")
+	srv := LoadConfig("")
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -128,7 +169,7 @@ func TestSendList(t *testing.T) {
 	}()
 
 	// Test
-	res, err := http.Get("http://localhost:12345/list")
+	res, err := http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +179,7 @@ func TestSendList(t *testing.T) {
 	res.Body.Close()
 
 	// Additional setup for next test
-	listener, err := net.Listen("tcp", "localhost:54321")
+	listener, err := net.Listen("tcp", shared.DefaultStorageAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -149,7 +190,7 @@ func TestSendList(t *testing.T) {
 	go rpcSrv.Accept(listener)
 
 	// Test
-	res, err = http.Get("http://localhost:12345/list")
+	res, err = http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -176,7 +217,7 @@ func TestSendList(t *testing.T) {
 	}
 
 	listener.Close()
-	res, err = http.Get("http://localhost:12345/list")
+	res, err = http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
 	if err != nil {
 		t.Fatal(err)
 	}
