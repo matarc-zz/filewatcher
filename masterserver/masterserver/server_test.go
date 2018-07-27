@@ -29,9 +29,6 @@ func TestLoadConfig(t *testing.T) {
 	if srv.StorageAddress != shared.DefaultStorageAddress {
 		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
 	}
-	if srv.quitCh == nil {
-		t.Fatalf("quitCh should not be nil")
-	}
 
 	file, err := ioutil.TempFile("", "filewatcher")
 	if err != nil {
@@ -49,9 +46,6 @@ func TestLoadConfig(t *testing.T) {
 	if srv.StorageAddress != shared.DefaultStorageAddress {
 		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
 	}
-	if srv.quitCh == nil {
-		t.Fatalf("quitCh should not be nil")
-	}
 
 	srv.Address = "localhost:12345"
 	srv.StorageAddress = "localhost:54321"
@@ -68,9 +62,6 @@ func TestLoadConfig(t *testing.T) {
 	}
 	if srv.StorageAddress != "localhost:54321" {
 		t.Fatalf("storageAddress should be 'localhost:54321', instead is '%s'", srv.StorageAddress)
-	}
-	if srv.quitCh == nil {
-		t.Fatalf("quitCh should not be nil")
 	}
 }
 
@@ -162,11 +153,11 @@ func TestSendList(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv := LoadConfig("")
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		srv.Run()
-	}()
+	err = srv.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
 
 	// Test
 	res, err := http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))

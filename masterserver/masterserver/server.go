@@ -17,8 +17,8 @@ import (
 type Server struct {
 	Address        string
 	StorageAddress string
-	quitCh         chan struct{}
 	nodes          []shared.Node
+	listener       net.Listener
 }
 
 func LoadConfig(cfgPath string) *Server {
@@ -45,26 +45,23 @@ func (srv *Server) init() {
 		glog.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
 		srv.StorageAddress = shared.DefaultStorageAddress
 	}
-	srv.quitCh = make(chan struct{})
 }
 
-func (srv *Server) Run() error {
+func (srv *Server) Run() (err error) {
 	router := mux.NewRouter()
 	// Create a route for our REST API on the method GET for list.
 	router.HandleFunc("/list", srv.SendList).Methods("GET")
-	listener, err := net.Listen("tcp", srv.Address)
+	srv.listener, err = net.Listen("tcp", srv.Address)
 	if err != nil {
 		glog.Error(err)
 		return err
 	}
-	defer listener.Close()
-	go http.Serve(listener, router)
-	<-srv.quitCh
+	go http.Serve(srv.listener, router)
 	return nil
 }
 
 func (srv *Server) Stop() {
-	close(srv.quitCh)
+	srv.listener.Close()
 }
 
 func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
