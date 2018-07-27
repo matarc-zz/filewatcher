@@ -19,7 +19,8 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	srv := LoadConfig("")
+	srv := new(Server)
+	shared.LoadConfig("", srv)
 	if srv == nil {
 		t.Fatalf("LoadConfig should not return nil")
 	}
@@ -36,7 +37,8 @@ func TestLoadConfig(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 	defer file.Close()
-	srv = LoadConfig(file.Name())
+	srv = new(Server)
+	shared.LoadConfig(file.Name(), srv)
 	if srv == nil {
 		t.Fatalf("LoadConfig should not return nil")
 	}
@@ -53,9 +55,10 @@ func TestLoadConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv = LoadConfig(file.Name())
+	srv = new(Server)
+	shared.LoadConfig(file.Name(), srv)
 	if srv == nil {
-		t.Fatalf("LoadConfig should not return nil")
+		t.Fatalf("shared.shared.LoadConfig should not return nil")
 	}
 	if srv.Address != "localhost:12345" {
 		t.Fatalf("address should be 'localhost:12345', instead is '%s'", srv.Address)
@@ -103,7 +106,8 @@ func Test_getList(t *testing.T) {
 	paths.Db = db
 	rpcSrv.Register(paths)
 	go rpcSrv.Accept(listener)
-	srv := LoadConfig("")
+	srv := new(Server)
+	shared.LoadConfig("", srv)
 
 	// Test
 	nodes, err := srv.getList()
@@ -152,7 +156,8 @@ func TestSendList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := LoadConfig("")
+	srv := new(Server)
+	shared.LoadConfig("", srv)
 	err = srv.Run()
 	if err != nil {
 		t.Fatal(err)

@@ -1,10 +1,8 @@
 package storage
 
 import (
-	"encoding/json"
 	"net"
 	"net/rpc"
-	"os"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -21,22 +19,7 @@ type Server struct {
 	db       *bolt.DB
 }
 
-func LoadConfig(cfgPath string) *Server {
-	srv := new(Server)
-	file, err := os.Open(cfgPath)
-	if err != nil {
-		glog.Errorf("Can't open '%s', using default configuration instead", cfgPath)
-	} else {
-		err = json.NewDecoder(file).Decode(srv)
-		if err != nil {
-			glog.Errorf("Can't decode '%s' as a json file, using default configuration instead", cfgPath)
-		}
-	}
-	srv.init()
-	return srv
-}
-
-func (srv *Server) init() {
+func (srv *Server) Init() {
 	if srv.Address == "" {
 		glog.Infof("Address is unset, using default address '%s'", shared.DefaultStorageAddress)
 		srv.Address = shared.DefaultStorageAddress

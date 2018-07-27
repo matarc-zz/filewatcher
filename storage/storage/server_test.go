@@ -12,7 +12,8 @@ import (
 )
 
 func TestLoadConfig(t *testing.T) {
-	srv := LoadConfig("")
+	srv := new(Server)
+	shared.LoadConfig("", srv)
 	if srv == nil {
 		t.Fatalf("LoadConfig should not return a nil value")
 	}
@@ -29,7 +30,8 @@ func TestLoadConfig(t *testing.T) {
 	}
 	defer os.Remove(file.Name())
 	defer file.Close()
-	srv = LoadConfig(file.Name())
+	srv = new(Server)
+	shared.LoadConfig(file.Name(), srv)
 	if srv == nil {
 		t.Fatalf("LoadConfig should not return a nil value")
 	}
@@ -46,7 +48,8 @@ func TestLoadConfig(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv = LoadConfig(file.Name())
+	srv = new(Server)
+	shared.LoadConfig(file.Name(), srv)
 	if srv == nil {
 		t.Fatalf("LoadConfig should not return a nil value")
 	}
@@ -65,7 +68,8 @@ func TestRun(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 	dbPath := filepath.Join(rootDir, "mydb")
-	srv := LoadConfig("")
+	srv := new(Server)
+	shared.LoadConfig("", srv)
 	srv.DbPath = dbPath
 	done := make(chan struct{})
 	go func() {
