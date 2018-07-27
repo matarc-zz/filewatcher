@@ -14,10 +14,11 @@ import (
 )
 
 type Server struct {
-	Address string
-	quitCh  chan struct{}
-	DbPath  string
-	rpcSrv  *rpc.Server
+	Address  string
+	DbPath   string
+	rpcSrv   *rpc.Server
+	listener net.Listener
+	db       *bolt.DB
 }
 
 func LoadConfig(cfgPath string) *Server {
@@ -45,35 +46,32 @@ func (srv *Server) init() {
 		srv.DbPath = shared.DefaultDbPath
 	}
 	srv.rpcSrv = rpc.NewServer()
-	srv.quitCh = make(chan struct{})
 }
 
-func (srv *Server) Run() {
-	db, err := bolt.Open(srv.DbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+func (srv *Server) Run() (err error) {
+	srv.db, err = bolt.Open(srv.DbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
 		glog.Error(err)
 		return
 	}
-	defer db.Close()
 
 	paths := new(shared.Paths)
-	paths.Db = db
+	paths.Db = srv.db
 	srv.rpcSrv.Register(paths)
 
-	listener, err := net.Listen("tcp", srv.Address)
+	srv.listener, err = net.Listen("tcp", srv.Address)
 	if err != nil {
 		glog.Error(err)
 		return
 	}
-	defer listener.Close()
 
 	go func() {
-		srv.rpcSrv.Accept(listener)
+		srv.rpcSrv.Accept(srv.listener)
 	}()
-
-	<-srv.quitCh
+	return nil
 }
 
 func (srv *Server) Stop() {
-	close(srv.quitCh)
+	srv.db.Close()
+	srv.listener.Close()
 }

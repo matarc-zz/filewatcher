@@ -19,9 +19,6 @@ func TestLoadConfig(t *testing.T) {
 	if srv.Address != shared.DefaultStorageAddress {
 		t.Fatalf("srv.address should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.Address)
 	}
-	if srv.quitCh == nil {
-		t.Fatalf("srv.quitCh should not be nil")
-	}
 	if srv.DbPath != shared.DefaultDbPath {
 		t.Fatalf("srv.dbPath should be '%s', instead is '%s'", shared.DefaultDbPath, srv.DbPath)
 	}
@@ -39,9 +36,6 @@ func TestLoadConfig(t *testing.T) {
 	if srv.Address != shared.DefaultStorageAddress {
 		t.Fatalf("srv.address should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.Address)
 	}
-	if srv.quitCh == nil {
-		t.Fatalf("srv.quitCh should not be nil")
-	}
 	if srv.DbPath != shared.DefaultDbPath {
 		t.Fatalf("srv.dbPath should be '%s', instead is '%s'", shared.DefaultDbPath, srv.DbPath)
 	}
@@ -58,9 +52,6 @@ func TestLoadConfig(t *testing.T) {
 	}
 	if srv.Address != "localhost:12345" {
 		t.Fatalf("srv.address should be 'localhost:12345', instead is '%s'", srv.Address)
-	}
-	if srv.quitCh == nil {
-		t.Fatalf("srv.quitCh should not be nil")
 	}
 	if srv.DbPath != "mydb" {
 		t.Fatalf("srv.dbPath should be 'mydb', instead is '%s'", srv.DbPath)
