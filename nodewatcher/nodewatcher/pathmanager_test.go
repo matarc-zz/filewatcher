@@ -11,6 +11,12 @@ func TestNewPathManager(t *testing.T) {
 	if pm == nil {
 		t.Fatal("pm should not be nil")
 	}
+	if pm.events == nil {
+		t.Fatal("events channel shouldn't be nil")
+	}
+	if pm.quitCh == nil {
+		t.Fatal("quitCh channel shouldn't be nil")
+	}
 }
 
 func Test_handleList(t *testing.T) {

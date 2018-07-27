@@ -11,6 +11,7 @@ type PathManager struct {
 func NewPathManager(pathCh chan<- []shared.Operation) *PathManager {
 	pm := new(PathManager)
 	pm.events = make(chan []shared.Operation, 10)
+	pm.quitCh = make(chan struct{})
 	go pm.handleList(pathCh)
 	return pm
 }
