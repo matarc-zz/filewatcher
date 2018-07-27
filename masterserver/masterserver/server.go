@@ -69,14 +69,16 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// If for some reason we can't access the storage server, we'll send the list we have in cache
 		// if we have one.
+		glog.Error(err)
 		if len(srv.nodes) > 0 {
 			err = json.NewEncoder(w).Encode(srv.nodes)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				glog.Error(err)
+				http.Error(w, "Encoding issue", http.StatusInternalServerError)
 				return
 			}
 		} else {
-			http.Error(w, err.Error(), http.StatusBadGateway)
+			http.Error(w, "Server unreachable", http.StatusBadGateway)
 			return
 		}
 	}
@@ -84,7 +86,8 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	srv.nodes = nodes
 	err = json.NewEncoder(w).Encode(nodes)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Error(err)
+		http.Error(w, "Encoding issue", http.StatusInternalServerError)
 		return
 	}
 }
