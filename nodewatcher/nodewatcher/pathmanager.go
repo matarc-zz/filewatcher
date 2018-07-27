@@ -3,18 +3,19 @@ package nodewatcher
 import "github.com/matarc/filewatcher/shared"
 
 type PathManager struct {
-	events chan shared.Operation
+	events chan []shared.Operation
 	list   []shared.Operation
+	quitCh chan struct{}
 }
 
 func NewPathManager(pathCh chan<- []shared.Operation) *PathManager {
 	pm := new(PathManager)
-	pm.events = make(chan shared.Operation, 100)
+	pm.events = make(chan []shared.Operation, 10)
 	go pm.handleList(pathCh)
 	return pm
 }
 
-func (pm *PathManager) GetEventsChan() chan<- shared.Operation {
+func (pm *PathManager) GetEventsChan() chan<- []shared.Operation {
 	return pm.events
 }
 
@@ -33,8 +34,14 @@ func (pm *PathManager) handleList(pathCh chan<- []shared.Operation) {
 		}
 		select {
 		case event := <-pm.events:
-			pm.list = append(pm.list, event)
+			pm.list = append(pm.list, event...)
 		case <-dataSentCh:
+		case <-pm.quitCh:
+			return
 		}
 	}
+}
+
+func (pm *PathManager) Stop() {
+	close(pm.quitCh)
 }

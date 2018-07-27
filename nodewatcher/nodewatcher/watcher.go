@@ -32,6 +32,11 @@ func NewWatcher(dir string) *Watcher {
 func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
 	operations := []shared.Operation{}
 	err := filepath.Walk(w.dir, func(path string, info os.FileInfo, err error) error {
+		select {
+		case <-w.quitCh:
+			return shared.ErrQuit
+		default:
+		}
 		if err != nil {
 			glog.Error(err)
 			return err
@@ -59,7 +64,10 @@ func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
 func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 	for {
 		select {
-		case event := <-w.watcher.Events:
+		case event, ok := <-w.watcher.Events:
+			if !ok {
+				return
+			}
 			if event.Op&fsnotify.Create == fsnotify.Create {
 				newPath, err := Chroot(event.Name, w.dir)
 				if err != nil {
@@ -77,6 +85,13 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 				}
 				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Remove}}
 			}
+		case <-w.quitCh:
+			return
 		}
 	}
+}
+
+func (w *Watcher) Stop() {
+	close(w.quitCh)
+	w.watcher.Close()
 }

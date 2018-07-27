@@ -19,8 +19,8 @@ func Test_handleList(t *testing.T) {
 
 	eventsCh := pm.GetEventsChan()
 	go func() {
-		eventsCh <- shared.Operation{"/my/path", shared.Create}
-		eventsCh <- shared.Operation{"/your/path", shared.Remove}
+		eventsCh <- []shared.Operation{shared.Operation{"/my/path", shared.Create}}
+		eventsCh <- []shared.Operation{shared.Operation{"/your/path", shared.Remove}}
 	}()
 	path := <-pathCh
 	if path[0].Path != "/my/path" {
