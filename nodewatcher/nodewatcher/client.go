@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/shared"
 )
 
@@ -25,18 +25,18 @@ func (clt *Client) Init() {
 	if clt.Id == "" {
 		id, err := os.Hostname()
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 		} else {
-			glog.Infof("Id is unset, using hostname '%s'", id)
+			log.Infof("Id is unset, using hostname '%s'", id)
 			clt.Id = id
 		}
 	}
 	if clt.Dir == "" {
 		clt.Dir = os.TempDir()
-		glog.Infof("Dir is unset, using tempdir '%s'", clt.Dir)
+		log.Infof("Dir is unset, using tempdir '%s'", clt.Dir)
 	}
 	if clt.StorageAddress == "" {
-		glog.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
+		log.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
 		clt.StorageAddress = shared.DefaultStorageAddress
 	}
 	clt.quitCh = make(chan struct{})
@@ -54,7 +54,7 @@ func (clt *Client) dial() (conn net.Conn, err error) {
 		if err == nil {
 			return
 		}
-		glog.Error(err)
+		log.Error(err)
 		// We wait 10 seconds before attempting a connection again in order to not use 100% of the CPU
 		// if the server is down.
 		select {
@@ -104,6 +104,7 @@ func (clt *Client) run(pathCh <-chan []shared.Operation) {
 }
 
 func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
+	log.Info("sendList")
 	rpcClt := rpc.NewClient(conn)
 	defer rpcClt.Close()
 	for {
@@ -116,9 +117,10 @@ func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
 		}
 		transaction := &shared.Transaction{Id: clt.Id, Operations: clt.buf}
 		reply := new(shared.Transaction)
+		log.Infof("Operations : '%v'", clt.buf)
 		err := rpcClt.Call("Paths.Update", transaction, reply)
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			break
 		}
 		clt.buf = []shared.Operation{}

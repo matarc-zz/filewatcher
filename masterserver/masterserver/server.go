@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/shared"
 )
 
@@ -22,11 +22,11 @@ type Server struct {
 
 func (srv *Server) Init() {
 	if srv.Address == "" {
-		glog.Infof("Address is unset, using default address '%s'", shared.DefaultMasterserverAddress)
+		log.Infof("Address is unset, using default address '%s'", shared.DefaultMasterserverAddress)
 		srv.Address = shared.DefaultMasterserverAddress
 	}
 	if srv.StorageAddress == "" {
-		glog.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
+		log.Infof("StorageAddress is unset, using default address '%s'", shared.DefaultStorageAddress)
 		srv.StorageAddress = shared.DefaultStorageAddress
 	}
 }
@@ -37,7 +37,7 @@ func (srv *Server) Run() (err error) {
 	router.HandleFunc("/list", srv.SendList).Methods("GET")
 	srv.listener, err = net.Listen("tcp", srv.Address)
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return err
 	}
 	go http.Serve(srv.listener, router)
@@ -53,11 +53,11 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// If for some reason we can't access the storage server, we'll send the list we have in cache
 		// if we have one.
-		glog.Error(err)
+		log.Error(err)
 		if len(srv.nodes) > 0 {
 			err = json.NewEncoder(w).Encode(srv.nodes)
 			if err != nil {
-				glog.Error(err)
+				log.Error(err)
 				http.Error(w, "Encoding issue", http.StatusInternalServerError)
 				return
 			}
@@ -70,7 +70,7 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	srv.nodes = nodes
 	err = json.NewEncoder(w).Encode(nodes)
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		http.Error(w, "Encoding issue", http.StatusInternalServerError)
 		return
 	}
@@ -79,7 +79,7 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 func (srv *Server) getList() ([]shared.Node, error) {
 	conn, err := net.Dial("tcp", srv.StorageAddress)
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return nil, err
 	}
 	rpcClt := rpc.NewClient(conn)
@@ -87,7 +87,7 @@ func (srv *Server) getList() ([]shared.Node, error) {
 	nodes := []shared.Node{}
 	err = rpcClt.Call("Paths.ListFiles", &struct{}{}, &nodes)
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return []shared.Node{}, err
 	}
 	for i := range nodes {

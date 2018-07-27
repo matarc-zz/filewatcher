@@ -6,7 +6,7 @@ import (
 	"flag"
 	"os"
 
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/masterserver/masterserver"
 	"github.com/matarc/filewatcher/nodewatcher/nodewatcher"
 	"github.com/matarc/filewatcher/storage/storage"
@@ -33,7 +33,7 @@ func main() {
 		cfg := masterserver.Server{Address: *address, StorageAddress: *storageAddress}
 		buf, err = json.Marshal(cfg)
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			os.Exit(1)
 		}
 
@@ -41,14 +41,14 @@ func main() {
 		cfg := nodewatcher.Client{StorageAddress: *storageAddress, Id: *id, Dir: *dir}
 		buf, err = json.Marshal(cfg)
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			os.Exit(1)
 		}
 	case "storage":
 		cfg := storage.Server{Address: *address, DbPath: *dbpath}
 		buf, err = json.Marshal(cfg)
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			os.Exit(1)
 		}
 	default:

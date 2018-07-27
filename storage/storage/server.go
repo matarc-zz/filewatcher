@@ -7,7 +7,7 @@ import (
 
 	"github.com/boltdb/bolt"
 
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/shared"
 )
 
@@ -21,20 +21,21 @@ type Server struct {
 
 func (srv *Server) Init() {
 	if srv.Address == "" {
-		glog.Infof("Address is unset, using default address '%s'", shared.DefaultStorageAddress)
+		log.Infof("Address is unset, using default address '%s'", shared.DefaultStorageAddress)
 		srv.Address = shared.DefaultStorageAddress
 	}
 	if srv.DbPath == "" {
-		glog.Infof("DbPath is unset, using default path '%s'", shared.DefaultDbPath)
+		log.Infof("DbPath is unset, using default path '%s'", shared.DefaultDbPath)
 		srv.DbPath = shared.DefaultDbPath
 	}
 	srv.rpcSrv = rpc.NewServer()
 }
 
 func (srv *Server) Run() (err error) {
+	log.Infof("Opening database '%s'", srv.DbPath)
 	srv.db, err = bolt.Open(srv.DbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 
@@ -42,9 +43,10 @@ func (srv *Server) Run() (err error) {
 	paths.Db = srv.db
 	srv.rpcSrv.Register(paths)
 
+	log.Infof("Listening on '%s'", srv.Address)
 	srv.listener, err = net.Listen("tcp", srv.Address)
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 

@@ -15,7 +15,7 @@ import (
 	"github.com/matarc/filewatcher/shared"
 
 	"github.com/boltdb/bolt"
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 )
 
 func TestInit(t *testing.T) {
@@ -50,7 +50,7 @@ func Test_getList(t *testing.T) {
 	dbPath := filepath.Join(rootDir, "mydb")
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 	defer db.Close()
@@ -110,7 +110,7 @@ func TestSendList(t *testing.T) {
 	dbPath := filepath.Join(rootDir, "mydb")
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 	defer db.Close()

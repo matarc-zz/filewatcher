@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/shared"
 )
 
@@ -21,7 +21,7 @@ func NewWatcher(dir string) *Watcher {
 	w.dir = dir
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return nil
 	}
 	w.watcher = watcher
@@ -54,18 +54,18 @@ func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
 		default:
 		}
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			return err
 		}
 		newPath, err := Chroot(path, w.dir)
 		if err != nil {
-			glog.Error(err)
+			log.Error(err)
 			return err
 		}
 		operations = append(operations, shared.Operation{Path: newPath, Event: shared.Create})
 		if info.IsDir() {
 			if err := w.watcher.Add(path); err != nil {
-				glog.Error(err)
+				log.Error(err)
 				return err
 			}
 		}
@@ -87,7 +87,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 			if event.Op&fsnotify.Create == fsnotify.Create {
 				newPath, err := Chroot(event.Name, w.dir)
 				if err != nil {
-					glog.Error(err)
+					log.Error(err)
 					continue
 				}
 				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Create}}
@@ -96,7 +96,7 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 				event.Op&fsnotify.Rename == fsnotify.Rename {
 				newPath, err := Chroot(event.Name, w.dir)
 				if err != nil {
-					glog.Error(err)
+					log.Error(err)
 					continue
 				}
 				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Remove}}

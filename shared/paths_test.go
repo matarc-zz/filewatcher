@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/golang/glog"
+	"github.com/matarc/filewatcher/log"
 )
 
 func TestUpdate(t *testing.T) {
@@ -21,7 +21,7 @@ func TestUpdate(t *testing.T) {
 	dbPath := filepath.Join(rootDir, "mydb")
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 	defer db.Close()
@@ -106,7 +106,7 @@ func TestListFiles(t *testing.T) {
 	dbPath := filepath.Join(rootDir, "mydb")
 	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		return
 	}
 	defer db.Close()
