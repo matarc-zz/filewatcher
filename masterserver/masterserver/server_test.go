@@ -18,12 +18,9 @@ import (
 	"github.com/golang/glog"
 )
 
-func TestLoadConfig(t *testing.T) {
+func TestInit(t *testing.T) {
 	srv := new(Server)
-	shared.LoadConfig("", srv)
-	if srv == nil {
-		t.Fatalf("LoadConfig should not return nil")
-	}
+	srv.Init()
 	if srv.Address != shared.DefaultMasterserverAddress {
 		t.Fatalf("address should be '%s', instead is '%s'", shared.DefaultMasterserverAddress, srv.Address)
 	}
@@ -31,35 +28,10 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
 	}
 
-	file, err := ioutil.TempFile("", "filewatcher")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(file.Name())
-	defer file.Close()
 	srv = new(Server)
-	shared.LoadConfig(file.Name(), srv)
-	if srv == nil {
-		t.Fatalf("LoadConfig should not return nil")
-	}
-	if srv.Address != shared.DefaultMasterserverAddress {
-		t.Fatalf("address should be '%s', instead is '%s'", shared.DefaultMasterserverAddress, srv.Address)
-	}
-	if srv.StorageAddress != shared.DefaultStorageAddress {
-		t.Fatalf("storageAddress should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.StorageAddress)
-	}
-
 	srv.Address = "localhost:12345"
 	srv.StorageAddress = "localhost:54321"
-	err = json.NewEncoder(file).Encode(srv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	srv = new(Server)
-	shared.LoadConfig(file.Name(), srv)
-	if srv == nil {
-		t.Fatalf("shared.shared.LoadConfig should not return nil")
-	}
+	srv.Init()
 	if srv.Address != "localhost:12345" {
 		t.Fatalf("address should be 'localhost:12345', instead is '%s'", srv.Address)
 	}

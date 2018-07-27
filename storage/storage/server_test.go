@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/rpc"
 	"os"
@@ -11,12 +10,9 @@ import (
 	"github.com/matarc/filewatcher/shared"
 )
 
-func TestLoadConfig(t *testing.T) {
+func TestInit(t *testing.T) {
 	srv := new(Server)
-	shared.LoadConfig("", srv)
-	if srv == nil {
-		t.Fatalf("LoadConfig should not return a nil value")
-	}
+	srv.Init()
 	if srv.Address != shared.DefaultStorageAddress {
 		t.Fatalf("srv.address should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.Address)
 	}
@@ -24,35 +20,10 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("srv.dbPath should be '%s', instead is '%s'", shared.DefaultDbPath, srv.DbPath)
 	}
 
-	file, err := ioutil.TempFile("", "filewatcher")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(file.Name())
-	defer file.Close()
 	srv = new(Server)
-	shared.LoadConfig(file.Name(), srv)
-	if srv == nil {
-		t.Fatalf("LoadConfig should not return a nil value")
-	}
-	if srv.Address != shared.DefaultStorageAddress {
-		t.Fatalf("srv.address should be '%s', instead is '%s'", shared.DefaultStorageAddress, srv.Address)
-	}
-	if srv.DbPath != shared.DefaultDbPath {
-		t.Fatalf("srv.dbPath should be '%s', instead is '%s'", shared.DefaultDbPath, srv.DbPath)
-	}
-
 	srv.Address = "localhost:12345"
 	srv.DbPath = "mydb"
-	err = json.NewEncoder(file).Encode(srv)
-	if err != nil {
-		t.Fatal(err)
-	}
-	srv = new(Server)
-	shared.LoadConfig(file.Name(), srv)
-	if srv == nil {
-		t.Fatalf("LoadConfig should not return a nil value")
-	}
+	srv.Init()
 	if srv.Address != "localhost:12345" {
 		t.Fatalf("srv.address should be 'localhost:12345', instead is '%s'", srv.Address)
 	}
