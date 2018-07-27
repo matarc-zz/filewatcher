@@ -45,7 +45,10 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	go clt.Run()
+	err = clt.Run()
+	if err != nil {
+		t.Fatal(err)
+	}
 	rpcSrv := rpc.NewServer()
 	paths := new(shared.Paths)
 	paths.Db = db
@@ -68,6 +71,20 @@ func TestRun(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	clt.Stop()
+
+	myDir = filepath.Join(rootDir, "myDir")
+	err = os.Mkdir(myDir, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	clt = new(Client)
+	shared.LoadConfig("", clt)
+	clt.Dir = myDir
+	err = clt.Run()
+	if err == nil {
+		t.Fatalf("Run should return an error when trying to watch an unreadable directory")
 	}
 }
 

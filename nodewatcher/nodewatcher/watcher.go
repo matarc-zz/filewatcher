@@ -1,6 +1,7 @@
 package nodewatcher
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -26,6 +27,21 @@ func NewWatcher(dir string) *Watcher {
 	w.watcher = watcher
 	w.quitCh = make(chan struct{})
 	return w
+}
+
+func (w *Watcher) CheckDir() error {
+	info, err := os.Lstat(w.dir)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("'%s' is not a directory", w.dir)
+	}
+	err = w.watcher.Add(w.dir)
+	if err != nil {
+		return fmt.Errorf("'%s' : %s", w.dir, err)
+	}
+	return nil
 }
 
 // WatchDir recursively watches all files in `dir` directory and its subdirectories.

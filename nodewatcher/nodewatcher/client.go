@@ -73,6 +73,10 @@ func (clt *Client) Run() error {
 	if clt.watcher == nil {
 		return fmt.Errorf("Watcher couldn't be initialized")
 	}
+	err := clt.watcher.CheckDir()
+	if err != nil {
+		return err
+	}
 	go func() {
 		clt.watcher.WatchDir(pathCh)
 		clt.watcher.HandleFileEvents(pathCh)

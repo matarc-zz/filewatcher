@@ -215,3 +215,44 @@ func TestHandleFileEvents(t *testing.T) {
 		t.Fatalf("pathEvent.Path should be '%s', instead is '%s'", newPath, pathEvent[0].Path)
 	}
 }
+
+func TestCheckDir(t *testing.T) {
+	rootDir, err := ioutil.TempDir("", "filepath")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(rootDir)
+	myDir := filepath.Join(rootDir, "my")
+	err = os.Mkdir(myDir, 0700)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := NewWatcher(myDir)
+	err = w.CheckDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.Stop()
+
+	err = os.Chmod(myDir, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = NewWatcher(myDir)
+	err = w.CheckDir()
+	if err == nil {
+		t.Fatalf("CheckDir should return an error on a directory that can't be read")
+	}
+	w.Stop()
+
+	file, err := ioutil.TempFile(rootDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	w = NewWatcher(file.Name())
+	err = w.CheckDir()
+	if err == nil {
+		t.Fatalf("CheckDir should return an error on a file")
+	}
+}
