@@ -6,12 +6,13 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/golang/glog"
-	"github.com/matarc/filewatcher/masterserver/masterserver"
+	"github.com/matarc/filewatcher/shared"
+
+	"github.com/matarc/filewatcher/log"
 )
 
 var (
-	config = flag.String("config", "masterserver.conf", "`Path` to configuration file")
+	config = flag.String("config", defaultCfgPath, "`Path` to configuration file")
 )
 
 func init() {
@@ -19,16 +20,17 @@ func init() {
 }
 
 func main() {
-	var srv *masterserver.Server
+	var srv shared.Runnable
 
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1)
 
 Reboot:
-	srv = masterserver.LoadConfig(*config)
+	srv = RunnableInstance()
+	shared.LoadConfig(*config, srv)
 	err := srv.Run()
 	if err != nil {
-		glog.Error(err)
+		log.Error(err)
 		os.Exit(1)
 	}
 	for {
@@ -37,7 +39,7 @@ Reboot:
 			switch sig {
 			case syscall.SIGUSR1:
 				// Reload configuration
-				glog.Infof("Reloading configuration '%s'", *config)
+				log.Infof("Reloading configuration '%s'", *config)
 				srv.Stop()
 				goto Reboot
 			case syscall.SIGINT:
@@ -46,7 +48,7 @@ Reboot:
 				fallthrough
 			case syscall.SIGQUIT:
 				// Terminate the program
-				glog.Info(sig)
+				log.Info(sig)
 				srv.Stop()
 				code := 0
 				sigCode, ok := sig.(syscall.Signal)
