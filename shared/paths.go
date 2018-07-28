@@ -29,7 +29,7 @@ func (p *Paths) Update(transaction *Transaction, reply *Transaction) error {
 				}
 				reply.Operations = append(reply.Operations, op)
 			} else if op.Event&Remove == Remove {
-				log.Info("Removing '%s' in the database")
+				log.Infof("Removing '%s' in the database", op.Path)
 				err = b.Delete([]byte(op.Path))
 				if err != nil {
 					return err
