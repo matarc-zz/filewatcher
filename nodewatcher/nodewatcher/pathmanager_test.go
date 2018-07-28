@@ -11,7 +11,7 @@ func TestNewPathManager(t *testing.T) {
 	if pm == nil {
 		t.Fatal("pm should not be nil")
 	}
-	if pm.events == nil {
+	if pm.operations == nil {
 		t.Fatal("events channel shouldn't be nil")
 	}
 	if pm.quitCh == nil {
@@ -23,7 +23,7 @@ func Test_handleList(t *testing.T) {
 	pathCh := make(chan []shared.Operation)
 	pm := NewPathManager(pathCh)
 
-	eventsCh := pm.GetEventsChan()
+	eventsCh := pm.GetChan()
 	go func() {
 		eventsCh <- []shared.Operation{shared.Operation{"/my/path", shared.Create}}
 		eventsCh <- []shared.Operation{shared.Operation{"/your/path", shared.Remove}}
@@ -46,7 +46,7 @@ func Test_handleList(t *testing.T) {
 
 func TestGetEventsChan(t *testing.T) {
 	pm := NewPathManager(make(chan []shared.Operation))
-	if pm.GetEventsChan() == nil {
+	if pm.GetChan() == nil {
 		t.Fatal("GetEventsChan should not return a nil channel")
 	}
 }
