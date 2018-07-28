@@ -55,18 +55,18 @@ func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
 		}
 		if err != nil {
 			log.Error(err)
-			return err
+			return filepath.SkipDir
 		}
 		newPath, err := Chroot(path, w.dir)
 		if err != nil {
 			log.Error(err)
-			return err
+			return filepath.SkipDir
 		}
 		operations = append(operations, shared.Operation{Path: newPath, Event: shared.Create})
 		if info.IsDir() {
 			if err := w.watcher.Add(path); err != nil {
 				log.Error(err)
-				return err
+				return filepath.SkipDir
 			}
 		}
 		return nil

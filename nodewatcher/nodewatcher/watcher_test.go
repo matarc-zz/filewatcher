@@ -114,6 +114,39 @@ func TestWatchDirListFiles(t *testing.T) {
 	}
 }
 
+func TestWatchDirSkipDir(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "nodewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+	rootDir := filepath.Join(tmpDir, "my")
+	err = os.Mkdir(rootDir, 0700)
+	if err != nil {
+		t.Fatal(err)
+	}
+	subDir := filepath.Join(rootDir, "a")
+	err = os.Mkdir(subDir, 0000)
+	if err != nil {
+		t.Fatal(err)
+	}
+	filepath := filepath.Join(rootDir, "b")
+	file, err := os.Create(filepath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file.Close()
+	w := NewWatcher(rootDir)
+	pathCh := make(chan []shared.Operation)
+	go w.WatchDir(pathCh)
+	paths := <-pathCh
+	if len(paths) != 2 {
+		t.Fatalf("There should be two operations")
+	}
+	if paths[1].Path != "my/b" {
+		t.Fatalf("The second path should be 'my/b', instead is '%s'", paths[1].Path)
+	}
+}
 func TestNewWatcher(t *testing.T) {
 	w := NewWatcher("/my/path")
 	if w == nil {
