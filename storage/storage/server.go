@@ -3,6 +3,7 @@ package storage
 import (
 	"net"
 	"net/rpc"
+	"path/filepath"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -29,6 +30,7 @@ func (srv *Server) Init() {
 		srv.DbPath = shared.DefaultDbPath
 	}
 	srv.rpcSrv = rpc.NewServer()
+	srv.DbPath = filepath.Clean(srv.DbPath)
 }
 
 func (srv *Server) Run() (err error) {

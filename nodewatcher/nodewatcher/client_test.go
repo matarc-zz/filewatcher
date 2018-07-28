@@ -104,7 +104,7 @@ func TestInit(t *testing.T) {
 	if clt.Id != hostname {
 		t.Fatalf("Id should be '%s', instead is '%s'", hostname, clt.Id)
 	}
-	tmpDir := os.TempDir()
+	tmpDir := filepath.Clean(os.TempDir())
 	if clt.Dir != tmpDir {
 		t.Fatalf("Dir should be '%s', instead is '%s'", tmpDir, clt.Id)
 	}

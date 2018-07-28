@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/rpc"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/matarc/filewatcher/log"
@@ -40,6 +41,7 @@ func (clt *Client) Init() {
 		clt.StorageAddress = shared.DefaultStorageAddress
 	}
 	clt.quitCh = make(chan struct{})
+	clt.Dir = filepath.Clean(clt.Dir)
 }
 
 func (clt *Client) Stop() {
