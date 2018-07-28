@@ -90,6 +90,12 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 					log.Error(err)
 					continue
 				}
+				if isDir(event.Name) {
+					err = w.watcher.Add(event.Name)
+					if err != nil {
+						log.Error(err)
+					}
+				}
 				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Create}}
 			}
 			if event.Op&fsnotify.Remove == fsnotify.Remove ||
@@ -98,6 +104,9 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 				if err != nil {
 					log.Error(err)
 					continue
+				}
+				if isDir(event.Name) {
+					w.watcher.Remove(event.Name)
 				}
 				pathCh <- []shared.Operation{shared.Operation{Path: newPath, Event: shared.Remove}}
 			}

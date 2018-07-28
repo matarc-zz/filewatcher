@@ -214,6 +214,32 @@ func TestHandleFileEvents(t *testing.T) {
 	if pathEvent[0].Path != newPath {
 		t.Fatalf("pathEvent.Path should be '%s', instead is '%s'", newPath, pathEvent[0].Path)
 	}
+
+	// Create a new directory `newDir` into rootDir and create another directory in `newDir`
+	newDir, err := ioutil.TempDir(rootDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pathEvent = <-pathCh
+	if pathEvent[0].Event&shared.Create != shared.Create {
+		t.Fatalf("pathEvent.Event should be 'Create', instead is '%s'", pathEvent[0].Event)
+	}
+	newPath, err = Chroot(newDir, rootDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pathEvent[0].Path != newPath {
+		t.Fatalf("pathEvent.Path should be '%s', instead is '%s'", newPath, pathEvent[0].Path)
+	}
+	subNewDir, err := ioutil.TempDir(newDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case pathEvent = <-pathCh:
+	case <-time.After(time.Second):
+		t.Fatalf("Event Create should have been sent for '%s'", subNewDir)
+	}
 }
 
 func TestCheckDir(t *testing.T) {
