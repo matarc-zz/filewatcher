@@ -107,6 +107,18 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 	}
 }
 
+func isDir(path string) bool {
+	path, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+	info, err := os.Lstat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
+}
+
 func (w *Watcher) Stop() {
 	close(w.quitCh)
 	w.watcher.Close()

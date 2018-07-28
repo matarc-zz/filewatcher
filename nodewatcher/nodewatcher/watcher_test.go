@@ -256,3 +256,22 @@ func TestCheckDir(t *testing.T) {
 		t.Fatalf("CheckDir should return an error on a file")
 	}
 }
+
+func Test_isDir(t *testing.T) {
+	rootDir, err := ioutil.TempDir("", "filewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(rootDir)
+	if !isDir(rootDir) {
+		t.Fatalf("isDir should return true on the newly created directory '%s'", rootDir)
+	}
+	file, err := ioutil.TempFile(rootDir, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+	if isDir(file.Name()) {
+		t.Fatalf("isDir should return false on the newly created file '%s'", file.Name())
+	}
+}
