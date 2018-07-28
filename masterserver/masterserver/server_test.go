@@ -186,11 +186,39 @@ func TestSendList(t *testing.T) {
 	}
 
 	listener.Close()
+	// Test cache
 	res, err = http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if res.StatusCode != http.StatusOK {
 		t.Fatalf("Status should be '%d', instead is '%s'", http.StatusOK, res.Status)
+	}
+	nodes = []shared.Node{}
+	err = json.NewDecoder(res.Body).Decode(&nodes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+	if len(nodes) != 1 {
+		t.Fatalf("nodes should have '1' node, instead has '%d'", len(nodes))
+	}
+	if len(nodes[0].Files) != 2 {
+		t.Fatalf("First node should have '2' path, instead has '%d'", len(nodes[0].Files))
+	}
+	if nodes[0].Files[0] != "/my/a" {
+		t.Fatalf("First file should be '/my/a', instead is '%s'", nodes[0].Files[0])
+	}
+	if nodes[0].Files[1] != "/my/b" {
+		t.Fatalf("First file should be '/my/b', instead is '%s'", nodes[0].Files[0])
+	}
+
+	// Test cache again (should still be fine)
+	res, err = http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("Cache wasn't saved, Status should be '%d', instead is '%s'", http.StatusOK, res.Status)
 	}
 }

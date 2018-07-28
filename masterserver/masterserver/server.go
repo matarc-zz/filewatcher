@@ -61,12 +61,11 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Error(err)
 				http.Error(w, "Encoding issue", http.StatusInternalServerError)
-				return
 			}
 		} else {
 			http.Error(w, "Server unreachable", http.StatusBadGateway)
-			return
 		}
+		return
 	}
 	// We cache the result in case the storage server falls.
 	srv.nodes = nodes
