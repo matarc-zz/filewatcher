@@ -94,14 +94,12 @@ func (clt *Client) run(pathCh <-chan []shared.Operation) {
 			return
 		default:
 		}
-		func() {
-			conn, err := clt.dial()
-			if err == shared.ErrQuit {
-				return
-			}
-			defer conn.Close()
-			clt.sendList(conn, pathCh)
-		}()
+		conn, err := clt.dial()
+		if err == shared.ErrQuit {
+			return
+		}
+		clt.sendList(conn, pathCh)
+		conn.Close()
 	}
 }
 
