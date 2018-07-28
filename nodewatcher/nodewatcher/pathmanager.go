@@ -44,5 +44,8 @@ func (pm *PathManager) handleList(pathCh chan<- []shared.Operation) {
 }
 
 func (pm *PathManager) Stop() {
-	close(pm.quitCh)
+	if pm.quitCh != nil {
+		close(pm.quitCh)
+		pm.quitCh = nil
+	}
 }

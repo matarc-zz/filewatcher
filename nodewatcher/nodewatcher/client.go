@@ -47,8 +47,13 @@ func (clt *Client) Init() {
 }
 
 func (clt *Client) Stop() {
-	close(clt.quitCh)
-	clt.watcher.Stop()
+	if clt.quitCh != nil {
+		close(clt.quitCh)
+		clt.quitCh = nil
+	}
+	if clt.watcher != nil {
+		clt.watcher.Stop()
+	}
 	clt.pm.Stop()
 }
 
@@ -103,6 +108,7 @@ func (clt *Client) run(pathCh <-chan []shared.Operation) {
 			return
 		}
 		err = clt.deleteRemoteList(conn)
+		conn.Close()
 		// Ugly but until this issue is fixed, not much we can do about it
 		// https://github.com/golang/go/issues/23340
 		if err == nil || err.Error() == bolt.ErrBucketNotFound.Error() {

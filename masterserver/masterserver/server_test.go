@@ -131,10 +131,10 @@ func TestSendList(t *testing.T) {
 	srv := new(Server)
 	shared.LoadConfig("", srv)
 	err = srv.Run()
+	defer srv.Stop()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer srv.Stop()
 
 	// Test
 	res, err := http.Get(fmt.Sprintf("http://%s/list", shared.DefaultMasterserverAddress))
@@ -151,6 +151,7 @@ func TestSendList(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer listener.Close()
 	rpcSrv := rpc.NewServer()
 	paths := new(shared.Paths)
 	paths.Db = db

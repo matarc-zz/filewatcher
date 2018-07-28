@@ -42,18 +42,17 @@ func TestRun(t *testing.T) {
 	srv := new(Server)
 	shared.LoadConfig("", srv)
 	srv.DbPath = dbPath
-	done := make(chan struct{})
-	go func() {
-		defer close(done)
-		srv.Run()
-	}()
+	err = srv.Run()
+	defer srv.Stop()
+	if err != nil {
+		t.Fatal(err)
+	}
 	clt, err := rpc.Dial("tcp", shared.DefaultStorageAddress)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer clt.Close()
 	srv.Stop()
-	<-done
 	_, err = rpc.Dial("tcp", shared.DefaultStorageAddress)
 	if err == nil {
 		t.Fatalf("Listener should no longer be listening")

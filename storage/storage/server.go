@@ -59,6 +59,10 @@ func (srv *Server) Run() (err error) {
 }
 
 func (srv *Server) Stop() {
-	srv.db.Close()
-	srv.listener.Close()
+	if srv.db != nil {
+		srv.db.Close()
+	}
+	if srv.listener != nil {
+		srv.listener.Close()
+	}
 }

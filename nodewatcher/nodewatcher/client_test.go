@@ -45,7 +45,9 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer listener.Close()
 	err = clt.Run()
+	defer clt.Stop()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,6 +85,7 @@ func TestRun(t *testing.T) {
 	shared.LoadConfig("", clt)
 	clt.Dir = myDir
 	err = clt.Run()
+	defer clt.Stop()
 	if err == nil {
 		t.Fatalf("Run should return an error when trying to watch an unreadable directory")
 	}

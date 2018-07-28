@@ -129,6 +129,9 @@ func isDir(path string) bool {
 }
 
 func (w *Watcher) Stop() {
-	close(w.quitCh)
+	if w.quitCh != nil {
+		close(w.quitCh)
+		w.quitCh = nil
+	}
 	w.watcher.Close()
 }

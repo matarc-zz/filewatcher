@@ -45,7 +45,9 @@ func (srv *Server) Run() (err error) {
 }
 
 func (srv *Server) Stop() {
-	srv.listener.Close()
+	if srv.listener != nil {
+		srv.listener.Close()
+	}
 }
 
 func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
