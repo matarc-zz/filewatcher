@@ -106,7 +106,7 @@ func TestInit(t *testing.T) {
 	}
 	tmpDir := filepath.Clean(os.TempDir())
 	if clt.Dir != tmpDir {
-		t.Fatalf("Dir should be '%s', instead is '%s'", tmpDir, clt.Id)
+		t.Fatalf("Dir should be '%s', instead is '%s'", tmpDir, clt.Dir)
 	}
 
 	clt = new(Client)
@@ -121,6 +121,6 @@ func TestInit(t *testing.T) {
 		t.Fatalf("Dir should be '/my', instead is '%s", clt.Dir)
 	}
 	if clt.StorageAddress != "localhost:12345" {
-		t.Fatalf("StorageAddress should be 'localhost:12345', instead is '%s", clt.StorageAddress)
+		t.Fatalf("StorageAddress should be 'localhost:12345', instead is '%s'", clt.StorageAddress)
 	}
 }
