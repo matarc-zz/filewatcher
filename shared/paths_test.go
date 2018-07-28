@@ -187,5 +187,38 @@ func TestListFiles(t *testing.T) {
 	if len(m) != 0 {
 		t.Fatalf("Some path were not inserted in the database '%v'", m)
 	}
+}
 
+func TestDeleteList(t *testing.T) {
+	rootDir, err := ioutil.TempDir("", "filewatcher")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(rootDir)
+	dbPath := filepath.Join(rootDir, "mydb")
+	db, err := bolt.Open(dbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	defer db.Close()
+
+	paths := new(Paths)
+	paths.Db = db
+	err = paths.DeleteList("1", &struct{}{})
+	if err != bolt.ErrBucketNotFound {
+		t.Fatal(err)
+	}
+
+	err = db.Batch(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte("1"))
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = paths.DeleteList("1", &struct{}{})
+	if err != nil {
+		t.Fatal(err)
+	}
 }

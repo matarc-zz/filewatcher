@@ -60,3 +60,9 @@ func (p *Paths) ListFiles(_ *struct{}, list *[]Node) error {
 		})
 	})
 }
+
+func (p *Paths) DeleteList(id string, _ *struct{}) error {
+	return p.Db.Batch(func(tx *bolt.Tx) error {
+		return tx.DeleteBucket([]byte(id))
+	})
+}

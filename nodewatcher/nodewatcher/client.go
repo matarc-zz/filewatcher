@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/boltdb/bolt"
+
 	"github.com/matarc/filewatcher/log"
 	"github.com/matarc/filewatcher/shared"
 )
@@ -51,6 +53,7 @@ func (clt *Client) Stop() {
 }
 
 func (clt *Client) dial() (conn net.Conn, err error) {
+	log.Info("dial")
 	for {
 		conn, err = net.Dial("tcp", clt.StorageAddress)
 		if err == nil {
@@ -59,6 +62,7 @@ func (clt *Client) dial() (conn net.Conn, err error) {
 		log.Error(err)
 		// We wait 10 seconds before attempting a connection again in order to not use 100% of the CPU
 		// if the server is down.
+		log.Info("Waiting 10 seconds")
 		select {
 		case <-clt.quitCh:
 			return nil, shared.ErrQuit
@@ -98,9 +102,34 @@ func (clt *Client) run(pathCh <-chan []shared.Operation) {
 		if err == shared.ErrQuit {
 			return
 		}
+		err = clt.deleteRemoteList(conn)
+		// Ugly but until this issue is fixed, not much we can do about it
+		// https://github.com/golang/go/issues/23340
+		if err == nil || err.Error() == bolt.ErrBucketNotFound.Error() {
+			break
+		}
+		log.Error(err)
+	}
+
+	for {
+		select {
+		case <-clt.quitCh:
+			return
+		default:
+		}
+		conn, err := clt.dial()
+		if err == shared.ErrQuit {
+			return
+		}
 		clt.sendList(conn, pathCh)
 		conn.Close()
 	}
+}
+
+func (clt *Client) deleteRemoteList(conn net.Conn) error {
+	rpcClt := rpc.NewClient(conn)
+	defer rpcClt.Close()
+	return rpcClt.Call("Paths.DeleteList", clt.Id, &struct{}{})
 }
 
 func (clt *Client) sendList(conn net.Conn, pathCh <-chan []shared.Operation) {
