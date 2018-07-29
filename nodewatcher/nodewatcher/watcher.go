@@ -16,6 +16,9 @@ type Watcher struct {
 	quitCh  chan struct{}
 }
 
+// NewWatcher returns a `Watcher` that lists and keeps track of all files present in
+// `dir` and its subdirectories.
+// It returns nil if the `fsnotify.Watcher` can't be created.
 func NewWatcher(dir string) *Watcher {
 	w := new(Watcher)
 	w.dir = dir
@@ -29,6 +32,7 @@ func NewWatcher(dir string) *Watcher {
 	return w
 }
 
+// CheckDir returns nil if `dir` is a watchable directory, an error otherwise.
 func (w *Watcher) CheckDir() error {
 	info, err := os.Lstat(w.dir)
 	if err != nil {
@@ -45,6 +49,7 @@ func (w *Watcher) CheckDir() error {
 }
 
 // WatchDir recursively watches all files in `dir` directory and its subdirectories.
+// It sends the list of all files in `dir` and its subdirectories to the `PathManager`.
 func (w *Watcher) WatchDir(pathCh chan<- []shared.Operation) error {
 	operations := []shared.Operation{}
 	err := filepath.Walk(w.dir, func(path string, info os.FileInfo, err error) error {
@@ -116,6 +121,8 @@ func (w *Watcher) HandleFileEvents(pathCh chan<- []shared.Operation) {
 	}
 }
 
+// isDir is a utility function that returns true if `path` is a directory, false otherwise.
+// It follows symlinks.
 func isDir(path string) bool {
 	path, err := filepath.EvalSymlinks(path)
 	if err != nil {
@@ -128,6 +135,7 @@ func isDir(path string) bool {
 	return info.IsDir()
 }
 
+// Stop stops the watcher.
 func (w *Watcher) Stop() {
 	if w.quitCh != nil {
 		close(w.quitCh)

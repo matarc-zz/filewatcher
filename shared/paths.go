@@ -41,6 +41,8 @@ func (p *Paths) Update(transaction *Transaction, reply *Transaction) error {
 	})
 }
 
+// Update is an RPC that list all files from all nodewatchers and returns it in `list`.
+// It returns an error if the operation can't be completed.
 func (p *Paths) ListFiles(_ *struct{}, list *[]Node) error {
 	log.Info("ListFiles")
 	return p.Db.View(func(tx *bolt.Tx) error {
@@ -61,6 +63,8 @@ func (p *Paths) ListFiles(_ *struct{}, list *[]Node) error {
 	})
 }
 
+// DeleteList is an RPC that removes the list from the nodewatcher `id`.
+// It returns an error if the operation can't be completed.
 func (p *Paths) DeleteList(id string, _ *struct{}) error {
 	return p.Db.Batch(func(tx *bolt.Tx) error {
 		return tx.DeleteBucket([]byte(id))

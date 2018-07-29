@@ -20,6 +20,7 @@ type Server struct {
 	db       *bolt.DB
 }
 
+// Init initialises the server.
 func (srv *Server) Init() {
 	if srv.Address == "" {
 		log.Infof("Address is unset, using default address '%s'", shared.DefaultStorageAddress)
@@ -33,6 +34,9 @@ func (srv *Server) Init() {
 	srv.DbPath = filepath.Clean(srv.DbPath)
 }
 
+// Run starts the storage server by opening its database `db` and listening on `Address` to
+// start the RPC.Server.
+// It returns an error if it fails to do any of those two actions.
 func (srv *Server) Run() (err error) {
 	log.Infof("Opening database '%s'", srv.DbPath)
 	srv.db, err = bolt.Open(srv.DbPath, 0600, &bolt.Options{Timeout: 1 * time.Second})
@@ -58,6 +62,7 @@ func (srv *Server) Run() (err error) {
 	return nil
 }
 
+// Stop stops the server.
 func (srv *Server) Stop() {
 	if srv.db != nil {
 		srv.db.Close()

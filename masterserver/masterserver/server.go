@@ -20,6 +20,7 @@ type Server struct {
 	listener       net.Listener
 }
 
+// Init initialize the server.
 func (srv *Server) Init() {
 	if srv.Address == "" {
 		log.Infof("Address is unset, using default address '%s'", shared.DefaultMasterserverAddress)
@@ -31,6 +32,8 @@ func (srv *Server) Init() {
 	}
 }
 
+// Run starts the masterserver by creating routes to our REST API and waiting for incoming requests.
+// It returns an error if it fails to listen.
 func (srv *Server) Run() (err error) {
 	router := mux.NewRouter()
 	// Create a route for our REST API on the method GET for list.
@@ -44,12 +47,18 @@ func (srv *Server) Run() (err error) {
 	return nil
 }
 
+// Stop stops the master server and closes the listener.
 func (srv *Server) Stop() {
 	if srv.listener != nil {
 		srv.listener.Close()
 	}
 }
 
+// SendList is a handler for the GET `/list` method in our REST API.
+// It contacts the storage server to ask for a list of all the files watched by the nodewatchers.
+// If it fails to do so, it will just send back the last list cached.
+// If there is none it returns an error.
+// The list is json encoded and follows this format : {[Id : string, Files : [string]]}
 func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	nodes, err := srv.getList()
 	if err != nil {
@@ -77,6 +86,7 @@ func (srv *Server) SendList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getList sends a request to the storage server to get a list of all
 func (srv *Server) getList() ([]shared.Node, error) {
 	conn, err := net.Dial("tcp", srv.StorageAddress)
 	if err != nil {
