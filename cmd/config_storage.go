@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/matarc/filewatcher/shared"
-	"github.com/matarc/filewatcher/storage/storage"
+	"github.com/matarc/filewatcher/storage"
 )
 
 const defaultCfgPath = "storage.conf"

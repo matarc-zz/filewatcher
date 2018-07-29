@@ -3,7 +3,7 @@
 package main
 
 import (
-	"github.com/matarc/filewatcher/masterserver/masterserver"
+	"github.com/matarc/filewatcher/masterserver"
 	"github.com/matarc/filewatcher/shared"
 )
 
